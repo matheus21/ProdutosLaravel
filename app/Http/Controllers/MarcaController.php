@@ -1,0 +1,128 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use Illuminate\Http\Request;
+use App\Marca;
+use Illuminate\Pagination\Paginator;
+use Illuminate\Support\Facades\DB;
+use Validator;
+
+class MarcaController extends Controller
+{
+
+    protected function validarMarca($request)
+    {
+        $validator = Validator::make($request->all(), [
+            "nome" => "required"
+        ]);
+
+        return $validator;
+    }
+
+    /**
+     * Display a listing of the resource.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function index(Request $request)
+    {
+
+        $qtd = $request['qtd'] ?: 2;
+        $page = $request['page'] ?: 1;
+
+        Paginator::currentPageResolver(function () use ($page) {
+            return $page;
+        });
+
+        $marcas = DB::table('marcas')->paginate($qtd);
+        return view('marcas.index', compact('marcas'));
+    }
+
+    /**
+     * Show the form for creating a new resource.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function create()
+    {
+        return view('marcas.create');
+    }
+
+    /**
+     * Store a newly created resource in storage.
+     *
+     * @param  \Illuminate\Http\Request $request
+     * @return \Illuminate\Http\Response
+     */
+    public function store(Request $request)
+    {
+
+        $validator = $this->validarMarca($request);
+        if ($validator->fails()) {
+            return redirect()->back()->withErrors($validator->errors());
+        }
+        $dados = $request->all();
+        Marca::create($dados);
+        return redirect()->route('marcas.index');
+    }
+
+    /**
+     * Display the specified resource.
+     *
+     * @param  int $id
+     * @return \Illuminate\Http\Response
+     */
+    public function show($id)
+    {
+        $marca = Marca::find($id);
+        return view('marcas.show', compact('marca'));
+    }
+
+    /**
+     * Show the form for editing the specified resource.
+     *
+     * @param  int $id
+     * @return \Illuminate\Http\Response
+     */
+    public function edit($id)
+    {
+        $marca = Marca::find($id);
+        return view('marcas.edit', compact('marca'));
+    }
+
+    /**
+     * Update the specified resource in storage.
+     *
+     * @param  \Illuminate\Http\Request $request
+     * @param  int $id
+     * @return \Illuminate\Http\Response
+     */
+    public function update(Request $request, $id)
+    {
+        $marca = Marca::find($id);
+        $marca->update($request->all());
+        return redirect()->route('marcas.index');
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     *
+     * @param  int $id
+     * @return \Illuminate\Http\Response
+     */
+    public function destroy($id)
+    {
+        $marca = Marca::find($id);
+        $marca->delete();
+        return redirect()->route('marcas.index');
+    }
+
+    public function remover($id)
+    {
+
+        $marca = Marca::find($id);
+        return view('marcas.remove', compact('marca'));
+
+    }
+}
